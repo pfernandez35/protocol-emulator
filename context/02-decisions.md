@@ -1,234 +1,251 @@
-# Journal des décisions
+# Decision log
 
-Format : une décision structurante = une entrée. On garde les décisions **abandonnées**
-aussi (statut `Remplacée`), parce que savoir ce qu'on a écarté et pourquoi évite de le
-re-proposer dans deux mois.
+Format: one structural decision = one entry. Abandoned decisions are kept too (status
+`Superseded`), because knowing what was ruled out and why is what stops it being
+re-proposed two months later.
 
-| # | Décision | Statut |
+| # | Decision | Status |
 |---|---|---|
-| [001](#adr-001--verilog-plutôt-que-hardcaml) | Verilog plutôt que Hardcaml | Accepté |
-| [002](#adr-002--tiles--6x4-malgré-le-template) | `tiles: 6x4` malgré le template | Accepté, à valider en CI |
-| [003](#adr-003--le-milestone-1-est-jetable-par-construction) | Milestone 1 jetable par construction | Accepté |
-| [004](#adr-004--les-tests-décodent-la-pin-jamais-létat-interne) | Tests via les pins, jamais l'état interne | Accepté |
-| [005](#adr-005--le-timing-est-asserté-dès-le-premier-jour) | Timing asserté dès le jour 1 | Accepté |
-| [006](#adr-006--pas-de-registre-shadow-sur-luart-tx) | Pas de registre shadow sur l'UART TX | Accepté, portée locale |
-| [007](#adr-007--la-vérification-est-un-livrable-pas-une-corvée) | La vérification est un livrable | **Proposé** |
-| [008](#adr-008--horloge-supposée-à-50-mhz) | Horloge à 50 MHz | **Provisoire** |
-| [009](#adr-009--axe-de-nouveauté--écouter-pas-seulement-parler) | Axe de nouveauté : écouter, pas seulement parler | **Proposé** |
-| [010](#adr-010--docs-internes-en-français-code-et-docs-publiques-en-anglais) | Docs internes en FR, code et public en EN | Accepté, révocable |
+| [001](#adr-001--verilog-rather-than-hardcaml) | Verilog rather than Hardcaml | Accepted |
+| [002](#adr-002--tiles-6x4-despite-the-template) | `tiles: 6x4` despite the template | Accepted, pending CI |
+| [003](#adr-003--milestone-1-is-disposable-by-design) | Milestone 1 is disposable by design | Accepted |
+| [004](#adr-004--tests-decode-the-pin-never-internal-state) | Tests read pins, never internal state | Accepted |
+| [005](#adr-005--timing-is-asserted-from-day-one) | Timing asserted from day one | Accepted |
+| [006](#adr-006--no-shadow-register-on-the-uart-tx) | No shadow register on the UART TX | Accepted, local scope |
+| [007](#adr-007--verification-is-a-deliverable-not-a-chore) | Verification is a deliverable | **Proposed** |
+| [008](#adr-008--clock-assumed-at-50-mhz) | Clock at 50 MHz | **Provisional** |
+| [009](#adr-009--novelty-axis--listen-dont-just-talk) | Novelty axis: listen, don't just talk | **Proposed** |
+| [010](#adr-010--internal-docs-in-french-code-and-public-docs-in-english) | Internal docs in French | **Superseded by 011** |
+| [011](#adr-011--everything-in-english) | Everything in English | Accepted |
 
 ---
 
-## ADR-001 — Verilog plutôt que Hardcaml
+## ADR-001 — Verilog rather than Hardcaml
 
-**Statut :** Accepté · 16 sept. 2026
+**Status:** Accepted · 16 Sep 2026
 
-**Contexte.** Jane Street utilise Hardcaml (DSL de génération de RTL en OCaml) pour ses
-propres designs et l'annonce dans le post. L'utiliser aurait une valeur de signal auprès
-des juges. Le template officiel du concours est en Verilog.
+**Context.** Jane Street uses Hardcaml (an OCaml DSL for RTL generation) for its own
+designs and mentions it in the post. Using it would carry signalling value with the
+judges. The official competition template is Verilog.
 
-**Décision.** Verilog.
+**Decision.** Verilog.
 
-**Pourquoi.** Paul a pratiqué le FPGA et le VHDL mais il y a plusieurs années. Hardcaml
-empilerait l'apprentissage d'OCaml *et* d'un DSL de génération de matériel par-dessus une
-remise à niveau HDL, sur un projet déjà dense et une deadline de 18 semaines. Le chemin
-Verilog est celui du template, de la documentation Tiny Tapeout et de la quasi-totalité
-des exemples disponibles — donc moins de friction à chaque blocage.
+**Why.** Paul has FPGA and VHDL experience, but from several years ago. Hardcaml would
+stack learning OCaml *and* a hardware-generation DSL on top of an HDL refresher, on an
+already dense project with an 18-week deadline. The Verilog path is the one the template,
+the Tiny Tapeout documentation and almost every available example follow — less friction
+at every point where we get stuck.
 
-**Conséquence.** On perd un point de séduction facile. On le compense sur l'axe
-vérification (ADR-007), qui pèse plus lourd dans les critères annoncés. À reconsidérer
-seulement si le projet prend beaucoup d'avance, ce qui est improbable.
-
----
-
-## ADR-002 — `tiles: 6x4` malgré le template
-
-**Statut :** Accepté, à valider en CI · 16 sept. 2026
-
-**Contexte.** Le blog impose explicitement `tiles: "6x4"` dans `info.yaml`. Le commentaire
-du template en amont ne liste comme valeurs valides que `1x1, 1x2, 2x2, 3x2, 4x2, 6x2,
-8x2` — 6x4 n'y figure pas.
-
-**Décision.** Mettre `6x4` comme le blog l'exige, et laisser la CI trancher.
-
-**Pourquoi.** Deux hypothèses : soit les outils du concours ont été mis à jour sans que le
-commentaire suive, soit le blog est en avance sur le template. On ne peut pas départager
-par la lecture, seulement par l'exécution. Le job `precheck` donne la réponse en une
-exécution et pour zéro effort — beaucoup moins cher que de deviner.
-
-**Conséquence.** Si `precheck` refuse 6x4, c'est un mail à `asic-competition@janestreet.com`
-et non un problème de design. Le budget d'aire (~24K cellules) ne bouge pas tant que la
-question n'est pas tranchée. Ne pas dimensionner l'architecture sur l'hypothèse 8x4.
+**Consequence.** We give up an easy point of appeal. We compensate on the verification
+axis (ADR-007), which weighs more heavily in the stated criteria. Worth reconsidering
+only if the project runs far ahead of schedule, which is unlikely.
 
 ---
 
-## ADR-003 — Le milestone 1 est jetable par construction
+## ADR-002 — `tiles: 6x4` despite the template
 
-**Statut :** Accepté · 16 sept. 2026
+**Status:** Accepted, pending CI · 16 Sep 2026
 
-**Contexte.** Le blog conseille : « Start by getting a UART transmitter out of a pin. Then
-make it programmable. » Un UART figé est l'inverse exact de ce que le concours demande.
+**Context.** The blog explicitly mandates `tiles: "6x4"` in `info.yaml`. The upstream
+template comment lists only `1x1, 1x2, 2x2, 3x2, 4x2, 6x2, 8x2` as valid — 6x4 is absent.
 
-**Décision.** Écrire un UART TX 8N1 en dur (`src/uart_tx.v`), et le documenter comme
-destiné à disparaître.
+**Decision.** Set `6x4` as the blog requires, and let CI settle it.
 
-**Pourquoi.** Trois usages, tous transitoires : valider la chaîne RTL → GDS de bout en
-bout, obtenir un **premier chiffre d'aire réel** qui calibre tout le reste, et servir de
-**modèle de référence** pour tester plus tard le firmware UART tournant sur le core.
+**Why.** Two hypotheses: either the competition tooling was updated and the comment was
+not, or the blog is ahead of the template. Reading cannot distinguish them; only running
+can. The `precheck` job answers in one run for zero effort — far cheaper than guessing.
 
-**Conséquence.** Le risque est de s'y attacher. Le commentaire en tête de `uart_tx.v` dit
-explicitement que le bloc doit disparaître. Si à la semaine 10 un UART figé est encore
-dans le design, c'est que le projet a échoué à son objectif principal.
-
----
-
-## ADR-004 — Les tests décodent la pin, jamais l'état interne
-
-**Statut :** Accepté · 16 sept. 2026
-
-**Contexte.** Un testbench peut soit observer les signaux internes du DUT, soit
-n'observer que ses pins.
-
-**Décision.** Les tests cocotb échantillonnent `uo_out` au milieu de chaque temps-bit,
-comme le ferait un vrai récepteur. Aucun accès à l'état interne.
-
-**Pourquoi.** Après synthèse, la simulation gate-level ne voit qu'un netlist : les noms
-de signaux internes ont disparu. Un test écrit sur l'état interne doit être réécrit à ce
-moment-là — exactement quand on a le moins de temps et le plus besoin de confiance. Un
-test écrit sur les pins passe tel quel du RTL au netlist.
-
-**Conséquence.** Les tests sont un peu plus longs à écrire. En échange, la suite entière
-est réutilisable en gate-level (job `gl_test` de la CI) sans modification. Cette règle
-vaut pour tout le projet, pas seulement le milestone 1.
+**Consequence.** If `precheck` rejects 6x4, that is an email to
+`asic-competition@janestreet.com`, not a design problem. The area budget (~24K cells)
+does not move until the question is settled. Do not size the architecture on the
+assumption that 8x4 will land.
 
 ---
 
-## ADR-005 — Le timing est asserté dès le premier jour
+## ADR-003 — Milestone 1 is disposable by design
 
-**Statut :** Accepté · 16 sept. 2026
+**Status:** Accepted · 16 Sep 2026
 
-**Contexte.** Sur ce projet, la précision temporelle n'est pas une qualité parmi d'autres :
-c'est *la* raison d'être de la puce. Un émulateur de protocoles qui dérive d'un cycle ne
-parle aucun protocole.
+**Context.** The blog advises: "Start by getting a UART transmitter out of a pin. Then
+make it programmable." A fixed UART is the exact opposite of what the competition asks
+for.
 
-**Décision.** `test_bit_timing` vérifie que chaque slot de bit dure **exactement**
-`CLK_DIV` cycles d'horloge, et non « à peu près ».
+**Decision.** Write a hard-wired 8N1 UART TX (`src/uart_tx.v`) and document it as
+destined for deletion.
 
-**Pourquoi.** Une dérive de timing ne se voit pas dans un test fonctionnel — l'octet
-arrive quand même. Elle se voit en silicium, face à un vrai périphérique, quand il est
-trop tard. Le coût d'écrire l'assertion maintenant est de dix lignes.
+**Why.** Three uses, all transitional: validate the RTL → GDS chain end to end, get a
+**first real area number** to calibrate everything else against, and later serve as a
+**reference model** for testing the UART firmware running on the core.
 
-**Conséquence.** Toute future instruction de timing du core doit recevoir le même
-traitement : une assertion exacte, pas une tolérance. C'est aussi la fondation de
-l'argumentaire de vérification (ADR-007).
-
----
-
-## ADR-006 — Pas de registre shadow sur l'UART TX
-
-**Statut :** Accepté, portée locale · 16 sept. 2026
-
-**Contexte.** L'UART TX ignore `load` tant qu'il est occupé. Un UART de production
-double-bufferise pour permettre l'émission dos à dos sans trou.
-
-**Décision.** Pas de double buffer. `load` pendant `busy` est ignoré silencieusement.
-
-**Pourquoi.** Un registre shadow coûte 8 flip-flops et de la logique de contrôle pour un
-bloc qui doit disparaître (ADR-003). Sur le chip final, l'enchaînement des trames sera
-géré **en firmware** — c'est précisément le genre de politique qu'on veut sortir du
-matériel.
-
-**Conséquence.** Les tests doivent attendre `busy == 0` entre deux octets (helper
-`wait_idle`). C'est un piège qui a coûté un échec de test lors de la première exécution —
-documenté dans `03-workflow.md`.
+**Consequence.** The risk is getting attached to it. The header comment in `uart_tx.v`
+states plainly that the block must disappear. If a fixed UART is still in the design at
+week 10, the project has failed at its primary goal.
 
 ---
 
-## ADR-007 — La vérification est un livrable, pas une corvée
+## ADR-004 — Tests decode the pin, never internal state
 
-**Statut :** **Proposé** — à valider avec Paul · 16 sept. 2026
+**Status:** Accepted · 16 Sep 2026
 
-**Contexte.** Les critères de jugement citent nommément « formal methods, random
-constrained tests, AI-assisted verification » et affirment que la vérification sera
-« extremely important » dans le flow ASIC à venir.
+**Context.** A testbench can either observe the DUT's internal signals or observe only
+its pins.
 
-**Décision proposée.** Construire la vérification comme un produit à part entière :
+**Decision.** The cocotb tests sample `uo_out` at the midpoint of each bit time, the way
+a real receiver would. No access to internal state.
 
-1. Un **simulateur de jeu d'instructions (ISS)** cycle-accurate en Python, écrit *avant*
-   le RTL et servant de spécification exécutable.
-2. Un **fuzzer différentiel** : génération de programmes aléatoires contraints, exécutés
-   en parallèle sur l'ISS et sur le RTL, comparaison cycle par cycle.
-3. Des **propriétés formelles** (SymbiYosys) sur les instructions de timing — par exemple
-   « `WAIT n` relâche toujours exactement n cycles plus tard, quel que soit l'état ».
+**Why.** After synthesis, gate-level simulation sees only a netlist: internal signal
+names are gone. A test written against internal state has to be rewritten at exactly the
+moment when there is least time and most need for confidence. A test written against pins
+carries over from RTL to netlist unchanged.
 
-**Pourquoi.** C'est là que le rapport valeur/effort est le meilleur pour ce projet précis.
-C'est du logiciel, donc le terrain où Paul est fort et où l'assistance IA est la plus
-efficace — alors que la fermeture de timing physique est le terrain où les deux sont les
-plus faibles. Et c'est explicitement noté par le jury.
-
-**Conséquence.** L'ISS devient un chemin critique : le RTL ne peut pas démarrer avant.
-Cela justifie de consacrer les semaines 2–3 à la spec et à l'ISS sans écrire une ligne de
-Verilog, ce qui peut sembler lent. Ça ne l'est pas.
+**Consequence.** Tests take slightly longer to write. In exchange the whole suite is
+reusable at gate level (the CI `gl_test` job) with no modification. This rule applies to
+the entire project, not just milestone 1.
 
 ---
 
-## ADR-008 — Horloge supposée à 50 MHz
+## ADR-005 — Timing is asserted from day one
 
-**Statut :** **Provisoire** — à confirmer avant de figer l'ISA · 16 sept. 2026
+**Status:** Accepted · 16 Sep 2026
 
-**Contexte.** `info.yaml` demande une fréquence. La fréquence max réellement tenable sur
-CMOS5L via Tiny Tapeout n'est pas connue à ce stade.
+**Context.** On this project timing precision is not one quality among many: it is the
+chip's entire reason to exist. A protocol emulator that drifts by a cycle speaks no
+protocol at all.
 
-**Décision.** 50 MHz, avec `CLK_DIV = 434` pour 115200 bauds.
+**Decision.** `test_bit_timing` checks that every bit slot lasts **exactly** `CLK_DIV`
+clock cycles, not approximately.
 
-**Pourquoi.** Ordre de grandeur plausible pour une carte Tiny Tapeout, et il fallait un
-chiffre pour avancer. Aucune information ne l'infirme pour l'instant.
+**Why.** Timing drift does not show up in a functional test — the byte still arrives. It
+shows up in silicon, against a real peripheral, when it is too late. Writing the
+assertion now costs ten lines.
 
-**Conséquence — importante.** C'est l'hypothèse la plus lourde du projet. La fréquence
-fixe la résolution temporelle, donc le débit max, donc **la faisabilité des stretch goals**
-(USB low-speed à 1,5 Mbit/s, Ethernet 10M). Elle conditionne aussi le nombre de cycles
-disponibles par bit pour exécuter du firmware — c'est-à-dire la complexité que l'ISA peut
-se permettre. **À confirmer avant de figer l'ISA**, pas après.
-
----
-
-## ADR-009 — Axe de nouveauté : écouter, pas seulement parler
-
-**Statut :** **Proposé** — à valider avec Paul · 16 sept. 2026
-
-**Contexte.** Le critère n°1 est la fonctionnalité originale. Les références explicites
-(PIO du RP2040, PRU des Sitara) définissent l'état de l'art : refaire un PIO en plus petit
-est le chemin par défaut, et donc le moins remarquable.
-
-**Décision proposée.** Ne pas seulement **émettre** les protocoles, mais savoir les
-**sniffer et les auto-identifier** : capture d'edges horodatée, détection automatique de
-baud, classification UART/SPI/I2C à la volée.
-
-**Pourquoi.** Jane Street dit que son usage est « hardware debugging and reverse
-engineering ». Un chip qui identifie un protocole inconnu sur un bus répond à ce besoin
-déclaré, et ni le PIO ni les PRU ne le font. C'est aussi une fonction qui exploite
-exactement les primitives déjà nécessaires à l'émulation (lire des pins, compter des
-cycles) — donc un coût d'aire marginal, pas un second sous-système.
-
-**Conséquence.** À trancher **pendant** le design de l'ISA, pas après : si le sniffing est
-retenu, l'ISA a besoin d'une primitive de capture temporelle (timestamp d'edge) qu'on ne
-peut pas greffer ensuite sans tout reprendre.
+**Consequence.** Every future timing instruction in the core gets the same treatment: an
+exact assertion, never a tolerance. This is also the foundation of the verification
+argument (ADR-007).
 
 ---
 
-## ADR-010 — Docs internes en français, code et docs publiques en anglais
+## ADR-006 — No shadow register on the UART TX
 
-**Statut :** Accepté, révocable · 16 sept. 2026
+**Status:** Accepted, local scope · 16 Sep 2026
 
-**Contexte.** Paul travaille en français. Le dépôt est public et sera lu par des juges
-anglophones, et un second contributeur pourrait rejoindre le projet.
+**Context.** The UART TX ignores `load` while busy. A production UART double-buffers so
+frames can go out back to back with no gap.
 
-**Décision.** `context/` en français. Code, commentaires, messages de commit,
-`docs/info.md` (la datasheet publiée) et le write-up final en anglais.
+**Decision.** No double buffer. `load` during `busy` is silently ignored.
 
-**Pourquoi.** `context/` sert au pilotage du projet et son lecteur principal est Paul.
-Tout ce qui est jugé ou lu par des tiers est en anglais.
+**Why.** A shadow register costs 8 flip-flops plus control logic, in a block that is
+meant to disappear (ADR-003). On the final chip, frame sequencing will be handled **in
+firmware** — that is exactly the kind of policy we want out of the hardware.
 
-**Conséquence.** Si un contributeur non francophone rejoint le projet, basculer
-`context/` en anglais — c'est une traduction, pas une réécriture. Décision à revoir à ce
-moment-là.
+**Consequence.** Tests must wait for `busy == 0` between bytes (`wait_idle` helper). This
+cost one test failure on the first run — documented in `03-workflow.md`.
+
+---
+
+## ADR-007 — Verification is a deliverable, not a chore
+
+**Status:** **Proposed** — needs Paul's sign-off · 16 Sep 2026
+
+**Context.** The judging criteria name "formal methods, random constrained tests,
+AI-assisted verification" and state that verification will be "extremely important" in
+the coming ASIC flow.
+
+**Proposed decision.** Build verification as a product in its own right:
+
+1. A cycle-accurate **instruction set simulator (ISS)** in Python, written *before* the
+   RTL and serving as an executable specification.
+2. A **differential fuzzer**: constrained-random program generation, run in parallel on
+   the ISS and the RTL, compared cycle by cycle.
+3. **Formal properties** (SymbiYosys) on the timing instructions — e.g. "`WAIT n` always
+   releases exactly n cycles later, from any state".
+
+**Why.** This is where the value-to-effort ratio is best for this specific project. It is
+software, so it is the ground where Paul is strong and where AI assistance is most
+effective — whereas physical timing closure is the ground where both are weakest. And it
+is explicitly what the judges said they want to see.
+
+**Consequence.** The ISS becomes the critical path: RTL cannot start before it. This
+justifies spending weeks 2–3 on spec and ISS without writing a line of Verilog, which can
+feel slow. It is not.
+
+---
+
+## ADR-008 — Clock assumed at 50 MHz
+
+**Status:** **Provisional** — confirm before freezing the ISA · 16 Sep 2026
+
+**Context.** `info.yaml` requires a frequency. The maximum frequency actually achievable
+on CMOS5L through Tiny Tapeout is not known at this stage.
+
+**Decision.** 50 MHz, with `CLK_DIV = 434` for 115200 baud.
+
+**Why.** A plausible order of magnitude for a Tiny Tapeout board, and a number was needed
+to make progress. Nothing currently contradicts it.
+
+**Consequence — important.** This is the heaviest assumption in the project. The
+frequency sets timing resolution, hence maximum bit rate, hence **the feasibility of the
+stretch goals** (low-speed USB at 1.5 Mbit/s, 10M Ethernet). It also sets how many cycles
+are available per bit to execute firmware — that is, how much complexity the ISA can
+afford. **Confirm before freezing the ISA**, not after.
+
+---
+
+## ADR-009 — Novelty axis: listen, don't just talk
+
+**Status:** **Proposed** — needs Paul's sign-off · 16 Sep 2026
+
+**Context.** Criterion #1 is unique functionality. The explicit references (RP2040 PIO,
+Sitara PRU) define the state of the art: rebuilding a smaller PIO is the default path,
+and therefore the least remarkable one.
+
+**Proposed decision.** Don't just **transmit** protocols — **sniff and auto-identify**
+them: timestamped edge capture, automatic baud detection, on-the-fly UART/SPI/I2C
+classification.
+
+**Why.** Jane Street states their use case is "hardware debugging and reverse
+engineering". A chip that identifies an unknown protocol on a bus answers that stated
+need, and neither PIO nor PRU does it. It also reuses exactly the primitives emulation
+already requires (read pins, count cycles) — so it is marginal area cost, not a second
+subsystem.
+
+**Consequence.** Must be settled **during** ISA design, not after: if sniffing is adopted,
+the ISA needs a temporal capture primitive (edge timestamping) that cannot be bolted on
+later without starting over.
+
+---
+
+## ADR-010 — Internal docs in French, code and public docs in English
+
+**Status:** **Superseded by [ADR-011](#adr-011--everything-in-english)** · 16 Sep 2026
+
+**Context.** Paul works in French. The repo is public and will be read by
+English-speaking judges, and a second contributor might join.
+
+**Decision.** `context/` in French; code, comments, commit messages, `docs/info.md` and
+the final write-up in English.
+
+**Why.** `context/` is for steering the project and its primary reader was Paul.
+Everything judged or read by third parties is in English.
+
+**Superseded because** Paul opted for English throughout the same day. See ADR-011.
+
+---
+
+## ADR-011 — Everything in English
+
+**Status:** Accepted · 16 Sep 2026
+
+**Context.** ADR-010 split the repo between French internal docs and English public ones.
+Paul confirmed he is comfortable reading English documentation.
+
+**Decision.** The entire repository is in English, `context/` included.
+
+**Why.** A single language removes the judgement call, on every new file, of which side
+of the line it falls. The repo is public and open source from day one; teams are strongly
+recommended, so an incoming contributor is a realistic scenario and English maximises who
+can join. It also means `context/` can be linked to directly from the final write-up
+without translation — and the decision log is itself evidence of methodology, which is a
+judged criterion.
+
+**Consequence.** Spoken exchanges with Paul stay in French; the written artefacts do not.

@@ -9,7 +9,8 @@ competition](https://blog.janestreet.com/protocol-emulator-asic-competition/), t
 
 > **Working on this repo? Read [`context/README.md`](context/README.md) first.**
 > It holds the constraints, the architecture decisions and their rationale — none of
-> which are inferable from the code alone.
+> which are inferable from the code alone. `CLAUDE.md` carries the same pointer for
+> coding agents.
 
 - [Project datasheet](docs/info.md)
 

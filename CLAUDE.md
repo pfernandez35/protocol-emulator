@@ -1,48 +1,49 @@
-# Protocol Emulator — instructions projet
+# Protocol Emulator — project instructions
 
-## À lire AVANT toute intervention sur ce dépôt
+## Read BEFORE touching this repo
 
-**Lis `context/README.md`, puis les fichiers qu'il indique.** Ce n'est pas optionnel :
-ce projet a des contraintes non devinables depuis le code seul — un budget d'aire dur,
-une deadline de concours, des critères de jugement qui orientent l'architecture, et des
-décisions déjà prises dont le *pourquoi* n'est écrit nulle part ailleurs.
+**Read `context/README.md`, then the files it points to.** This is not optional: the
+project has constraints that cannot be inferred from the code alone — a hard area budget,
+a competition deadline, judging criteria that drive the architecture, and decisions
+already taken whose *reasoning* is written nowhere else.
 
-| Fichier | Contenu |
+| File | Contents |
 |---|---|
-| `context/README.md` | Carte du projet, état actuel, prochaines actions |
-| `context/01-competition.md` | Le brief, les contraintes dures, les critères de jugement |
-| `context/02-decisions.md` | Journal des décisions techniques et architecturales (ADR) |
-| `context/03-workflow.md` | Commandes, layout, pièges déjà rencontrés |
+| `context/README.md` | Project map, current state, next actions |
+| `context/01-competition.md` | The brief, hard constraints, judging criteria |
+| `context/02-decisions.md` | Log of technical and architectural decisions (ADRs) |
+| `context/03-workflow.md` | Commands, layout, gotchas already hit |
 
-## Le contexte en une phrase
+## The project in one sentence
 
-Concevoir un ASIC open source : un micro-CPU programmable qui bit-bang des protocoles
-matériels (UART/SPI/I2C) en firmware plutôt qu'en logique figée, dans **~24 000 cellules**,
-pour le concours Jane Street, **deadline 18 janvier 2027**. Jugé sur la **nouveauté
-fonctionnelle** et sur la **méthodologie de vérification**.
+Design an open-source ASIC: a programmable micro-CPU that bit-bangs hardware protocols
+(UART/SPI/I2C) in firmware rather than fixed logic, in **~24,000 cells**, for the Jane
+Street competition, **deadline 18 January 2027**. Judged on **functional novelty** and on
+**verification methodology**.
 
-## Règles de travail
+## Working rules
 
-1. **Consigner les décisions.** Une décision structurante prise = une entrée dans
-   `context/02-decisions.md`, au format des existantes (Contexte / Décision / Pourquoi /
-   Conséquence). Sans le pourquoi, la décision sera re-débattue dans trois semaines.
-2. **Ne pas contredire un ADR sans le dire.** S'il faut revenir sur une décision, changer
-   son statut en `Remplacée` et en écrire une nouvelle. Ne jamais réécrire l'historique.
-3. **Tester par les pins, jamais par l'état interne** (ADR-004). La suite de tests doit
-   rester rejouable telle quelle contre le netlist post-synthèse.
-4. **Les assertions de timing sont exactes, jamais tolérantes** (ADR-005). La précision
-   temporelle est la raison d'être de la puce.
-5. **Surveiller le budget d'aire à chaque ajout notable.**
+1. **Record decisions.** One structural decision made = one entry in
+   `context/02-decisions.md`, in the same format as the existing ones (Context / Decision
+   / Why / Consequence). Without the why, the decision gets re-litigated in three weeks.
+2. **Never contradict an ADR silently.** To reverse a decision, set its status to
+   `Superseded` and write a new one. Never rewrite history.
+3. **Test through the pins, never internal state** (ADR-004). The suite must stay
+   replayable as-is against the post-synthesis netlist.
+4. **Timing assertions are exact, never tolerant** (ADR-005). Timing precision is the
+   chip's reason to exist.
+5. **Watch the area budget on every significant addition.**
    `yosys -p "read_verilog src/*.v; synth -top tt_um_pfernandez35_protoemu -flatten; stat"`
-   Repère : l'UART TX figé = 104 cellules, soit 0,4 % du budget.
-6. **Ajouter un fichier source demande deux éditions** : `info.yaml:source_files` **et**
-   `test/Makefile:PROJECT_SOURCES`. Oublier la seconde donne une erreur incompréhensible.
-7. **`docs/` appartient à Tiny Tapeout** (datasheet publiée, en anglais). La doc interne
-   va dans `context/`, en français. Ne pas mélanger.
+   Benchmark: the fixed UART TX is 104 cells, 0.4% of budget.
+6. **Adding a source file takes two edits**: `info.yaml:source_files` **and**
+   `test/Makefile:PROJECT_SOURCES`. Forgetting the second gives an incomprehensible error.
+7. **`docs/` belongs to Tiny Tapeout** (the published datasheet — CI fails if it is left
+   as template stubs). Internal documentation goes in `context/`. Do not mix them.
+8. **Everything written in this repo is in English** (ADR-011), including `context/`.
+   Spoken exchanges with Paul are in French.
 
-## Ce qui relève de Paul, pas de l'assistant
+## Paul's call, not the assistant's
 
-- Créer le dépôt public et pousser (le dépôt doit être open source, mais c'est sa décision).
-- Remplir le formulaire d'inscription Jane Street (données personnelles).
-- Trancher les ADR marqués **Proposé** — notamment 007 (stratégie de vérification) et
-  009 (axe de nouveauté), qui engagent le design de l'ISA.
+- Filling in the Jane Street sign-up form (personal data).
+- Settling the ADRs marked **Proposed** — notably 007 (verification strategy) and 009
+  (novelty axis), which both constrain the ISA design.

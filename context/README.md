@@ -1,55 +1,52 @@
-# Contexte projet — à lire avant toute session de travail
+# Project context — read before any work session
 
-Émulateur de protocoles sur ASIC. Entrée au concours Jane Street.
-**Deadline : 18 janvier 2027.**
+Protocol emulator ASIC. Entry for the Jane Street competition.
+**Deadline: 18 January 2027.**
 
-## Lire dans cet ordre
+## Read in this order
 
-| Fichier | Contenu | Quand le lire |
+| File | Contents | When |
 |---|---|---|
-| **[01-competition.md](01-competition.md)** | Le brief, les contraintes dures, les critères de jugement, les questions en suspens | Une fois, en entier |
-| **[02-decisions.md](02-decisions.md)** | Journal des décisions techniques et architecturales, avec leur *pourquoi* | Avant de remettre en cause quoi que ce soit |
-| **[03-workflow.md](03-workflow.md)** | Commandes, layout des fichiers, pièges rencontrés | Au moment de coder |
+| **[01-competition.md](01-competition.md)** | The brief, hard constraints, judging criteria, open questions | Once, in full |
+| **[02-decisions.md](02-decisions.md)** | Log of technical and architectural decisions, with their *why* | Before overturning anything |
+| **[03-workflow.md](03-workflow.md)** | Commands, layout, gotchas already hit | When you start coding |
 
-Règle : **une décision structurante prise = une entrée dans `02-decisions.md`.**
-Sans ça, la raison se perd et on la re-débat dans trois semaines.
+Rule: **one structural decision made = one entry in `02-decisions.md`.**
+Without it the reasoning is lost and gets re-litigated three weeks later.
 
-## État au 16 septembre 2026
+## State as of 16 September 2026
 
-Milestone 1 **terminé** : un octet écrit sur `ui_in`, strobé par `uio_in[0]`, sort
-de `uo_out[0]` en trame UART 8N1. 4 tests cocotb verts. La chaîne RTL → simulation
-fonctionne en local.
+Milestone 1 **done**: a byte written to `ui_in` and strobed with `uio_in[0]` comes out
+of `uo_out[0]` as an 8N1 UART frame. 4 cocotb tests green. RTL simulation runs locally;
+the full GDS flow runs in CI.
 
-| Mesure | Valeur |
+| Measure | Value |
 |---|---|
-| Aire UART TX (yosys générique, `-flatten`) | **104 cellules**, 23 flip-flops |
-| Budget total | ~24 000 cellules (24 tiles × ~1K) |
-| Occupation | **~0,4 %** |
+| UART TX area (generic yosys, `-flatten`) | **104 cells**, 23 flip-flops |
+| Total budget | ~24,000 cells (24 tiles × ~1K) |
+| Occupancy | **~0.4%** |
 
-Lecture : un UART figé ne coûte rien. Le budget partira intégralement dans le core
-programmable — mémoire d'instructions, décodeur, compteurs de timing. C'est là que le
-projet se gagne.
+Reading: a fixed UART costs nothing. The budget will go entirely into the programmable
+core — instruction memory, decoder, timing counters. That is where the project is won.
 
-## Bloqué sur / prochaines actions
+## Blocked on / next actions
 
-1. **Pousser sur GitHub** — le flow RTL → GDS → precheck → test gate-level ne tourne
-   que dans les GitHub Actions. C'est le seul moyen d'obtenir une aire PDK réelle et
-   de valider que 6x4 est accepté. Décision de Paul (dépôt public).
-2. **Remplir le formulaire d'inscription** Jane Street — à faire par Paul. Ce n'est pas
-   une formalité : c'est ce qui déclenche le mail si le 8x4 (+30 % d'aire) est débloqué,
-   ce qui changerait l'architecture.
-3. **Design de l'ISA** (semaines 2–3) — la décision structurante du projet. Rien de
-   sérieux ne peut commencer avant.
+1. **Sign up** with Jane Street — Paul's to do. Not a formality: it is what triggers the
+   email if the 8x4 area increase (+30%) is unlocked, which would change the architecture.
+2. **Settle the Proposed ADRs** — 007 (verification strategy) and 009 (novelty axis).
+   Both constrain the ISA, so they must be decided before week 2.
+3. **ISA design** (weeks 2–3) — the structural decision of the project. Nothing serious
+   starts before it.
 
-## Planning
+## Schedule
 
-| Semaines | Objectif |
+| Weeks | Goal |
 |---|---|
-| 1 ✅ | Environnement + UART TX + première mesure d'aire |
-| 2–3 | Design de l'ISA : spec + assembleur + simulateur (ISS) |
-| 4–6 | Cœur RTL, co-simulé contre l'ISS |
-| 7–9 | Firmware UART/SPI/I2C prouvé contre des modèles de référence |
-| 10–12 | Tenir dans le budget : SRAM, synthèse, timing |
-| 13–15 | Stretch (USB low-speed / mode sniffer) + preuves formelles |
-| 16–17 | Write-up, démos, propreté du dépôt — la moitié de la note |
-| 18 | Marge + soumission |
+| 1 ✅ | Environment + UART TX + first area measurement |
+| 2–3 | ISA design: spec + assembler + instruction set simulator (ISS) |
+| 4–6 | RTL core, co-simulated against the ISS |
+| 7–9 | UART/SPI/I2C firmware, proven against reference models |
+| 10–12 | Fit the budget: SRAM, synthesis, timing |
+| 13–15 | Stretch (low-speed USB / sniffer mode) + formal proofs |
+| 16–17 | Write-up, demos, repo polish — half the score |
+| 18 | Slack + submission |

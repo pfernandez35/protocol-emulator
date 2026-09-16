@@ -4,78 +4,85 @@
 
 ```
 src/
-  project.v          Top level. Doit s'appeler tt_um_pfernandez35_protoemu.
-  uart_tx.v          UART 8N1 figé — jetable par construction (ADR-003).
+  project.v          Top level. Must be named tt_um_pfernandez35_protoemu.
+  uart_tx.v          Fixed 8N1 UART — disposable by design (ADR-003).
 test/
-  Makefile           PROJECT_SOURCES doit lister chaque fichier de src/.
-  tb.v               Wrapper Verilog instanciant le top. Dump les ondes en FST.
-  test.py            Tests cocotb.
-info.yaml            Métadonnées Tiny Tapeout : tiles, pinout, source_files.
-docs/info.md         Datasheet PUBLIÉE par Tiny Tapeout. En anglais. Ne pas confondre
-                     avec context/, qui est interne.
-context/             Ce dossier. Interne, français.
-.github/workflows/   gds · test · docs · fpga (le vrai flow ASIC est ici)
+  Makefile           PROJECT_SOURCES must list every file in src/.
+  tb.v               Verilog wrapper instantiating the top. Dumps waves as FST.
+  test.py            cocotb tests.
+info.yaml            Tiny Tapeout metadata: tiles, pinout, source_files.
+docs/info.md         Datasheet PUBLISHED by Tiny Tapeout. Not to be confused with
+                     context/, which is internal working documentation.
+context/             This folder. Internal.
+.github/workflows/   gds · test · docs · fpga (the real ASIC flow lives here)
 ```
 
-## Commandes
+## Commands
 
 ```bash
-# Simulation RTL — le boulot quotidien
+# RTL simulation — the daily loop
 cd test && PATH=../.venv/bin:$PATH make -B
 
-# Voir les ondes
-gtkwave test/tb.fst        # ou: surfer test/tb.fst
+# View waveforms
+gtkwave test/tb.fst        # or: surfer test/tb.fst
 
-# Estimation d'aire, sans PDK (rapide, ordre de grandeur)
+# Area estimate, no PDK (fast, order of magnitude only)
 yosys -p "read_verilog src/*.v; synth -top tt_um_pfernandez35_protoemu -flatten; stat"
 
-# Aire PDK réelle, precheck 6x4, test gate-level → uniquement en CI, sur push
+# Real PDK area, 6x4 precheck, gate-level test → CI only, on push
 ```
 
-Environnement local : `.venv/` (cocotb 2.0.1, pytest), `iverilog` et `yosys` via Homebrew.
-Tout le reste du flow ASIC tourne dans les GitHub Actions — rien à installer.
+Local environment: `.venv/` (cocotb 2.0.1, pytest), `iverilog` and `yosys` via Homebrew.
+Everything else in the ASIC flow runs in GitHub Actions — nothing to install.
 
-## Le flow CI
+## The CI flow
 
-Un `git push` déclenche `.github/workflows/gds.yaml` :
+A `git push` triggers `.github/workflows/gds.yaml`:
 
-| Job | Ce qu'il donne |
+| Job | What it gives you |
 |---|---|
-| `gds` | Synthèse + place & route → GDS. **L'aire PDK réelle.** |
-| `precheck` | Vérifs de conformité Tiny Tapeout. **C'est lui qui tranchera le 6x4** (ADR-002). |
-| `gl_test` | Rejoue les tests cocotb contre le netlist post-synthèse. Passe tel quel grâce à ADR-004. |
-| `viewer` | Publie une vue du layout sur GitHub Pages. |
+| `gds` | Synthesis + place & route → GDS. **The real PDK area.** |
+| `precheck` | Tiny Tapeout conformance checks. **This is what settles 6x4** (ADR-002). |
+| `gl_test` | Replays the cocotb tests against the post-synthesis netlist. Passes unchanged thanks to ADR-004. |
+| `viewer` | Publishes a layout view to GitHub Pages. |
 
-`fpga.yaml` produit un bitstream ICE40UP5K mais ne tourne pas sur push (`branches: none`).
-À activer si une carte compatible est disponible — le blog recommande de tester sur FPGA
-avant le flow ASIC.
+`docs.yaml` runs `tt_tool.py --check-docs` against `docs/info.md` and **fails on the
+template placeholder text** — the datasheet has to be genuinely written, not left as
+stubs.
 
-## Pièges rencontrés
+`fpga.yaml` builds an ICE40UP5K bitstream but does not run on push (`branches: none`).
+Worth enabling if a compatible board is available — the blog recommends testing on FPGA
+before the ASIC flow.
 
-**Ajouter un fichier source demande deux éditions.** `info.yaml:source_files` **et**
-`test/Makefile:PROJECT_SOURCES`. Oublier la seconde donne une erreur d'élaboration
-obscure, sans rapport apparent avec la cause.
+## Gotchas already hit
 
-**cocotb 2.x utilise `unit=`, pas `units=`.** Le pluriel est l'API 1.x. Les exemples
-qui traînent en ligne sont majoritairement en 1.x.
+**Adding a source file takes two edits.** `info.yaml:source_files` **and**
+`test/Makefile:PROJECT_SOURCES`. Forgetting the second produces an obscure elaboration
+error that does not point at the cause.
 
-**Tester un UART avec `0xAA` est un piège.** Trame émise LSB first :
-`{stop, data, start}`. Avec `0xAA`, le bit de start (0) et `data[0]` (0) sont au même
-niveau et **fusionnent en un seul palier** de deux temps-bit — toute mesure de largeur de
-bit est alors fausse. Utiliser **`0x55`**, dont la trame alterne sur chaque slot
-(`0,1,0,1,0,1,0,1,0,1`), ce qui rend chaque bit mesurable isolément.
+**cocotb 2.x uses `unit=`, not `units=`.** The plural is the 1.x API, and most examples
+online are still 1.x.
 
-**Il faut attendre `busy == 0` entre deux octets.** Pas de registre shadow (ADR-006).
-Strobé pendant `busy`, `load` est ignoré silencieusement — le test échoue plus loin, sur
-une absence de start bit, à un endroit qui ne désigne pas la cause. Helper `wait_idle()`
-dans `test.py`.
+**Testing a UART with `0xAA` is a trap.** The frame is sent LSB first as
+`{stop, data, start}`. With `0xAA`, the start bit (0) and `data[0]` (0) are at the same
+level and **merge into a single two-bit-wide pulse** — any bit-width measurement is then
+wrong. Use **`0x55`**, whose frame alternates on every slot (`0,1,0,1,0,1,0,1,0,1`), so
+each bit is measurable in isolation.
 
-**Le dépôt a été cloné depuis le template.** Le remote `origin` a été renommé `upstream`
-pour éviter un push accidentel vers TinyTapeout. Un `origin` reste à créer.
+**You must wait for `busy == 0` between bytes.** No shadow register (ADR-006). Strobed
+during `busy`, `load` is silently dropped — the test then fails further along on a
+missing start bit, at a point that does not identify the cause. See the `wait_idle()`
+helper in `test.py`.
+
+**The repo was cloned from the template with `--depth 1`.** The first push to a fresh
+remote fails with `did not receive expected object` because the shallow base commit has
+no parents. Fixed with `git fetch --unshallow upstream`. The template remote is kept as
+`upstream`; `origin` is Paul's repo.
 
 ## Conventions
 
-- Un fichier `src/*.v` = un module, même nom.
-- Tout test observe les pins, jamais l'état interne (ADR-004).
-- Toute assertion de timing est exacte, jamais tolérante (ADR-005).
-- Une décision structurante prise = une entrée dans `02-decisions.md`, avec son pourquoi.
+- One `src/*.v` file = one module, same name.
+- Every test observes pins, never internal state (ADR-004).
+- Every timing assertion is exact, never tolerant (ADR-005).
+- One structural decision made = one entry in `02-decisions.md`, with its why.
+- Never rewrite a decision: mark it `Superseded` and write a new one (see ADR-010/011).

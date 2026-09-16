@@ -1,78 +1,78 @@
-# Le concours
+# The competition
 
-Source : https://blog.janestreet.com/protocol-emulator-asic-competition/ (10 sept. 2026)
-Contact : `asic-competition@janestreet.com`
+Source: https://blog.janestreet.com/protocol-emulator-asic-competition/ (10 Sep 2026)
+Contact: `asic-competition@janestreet.com`
 
-## Ce qui est demandé
+## What is being asked
 
-Concevoir un **émulateur de protocoles généraliste et open source** : un micro-CPU dont
-le jeu d'instructions est taillé pour lire des pins, écrire des pins, compter des cycles
-et tenir un timing au cycle près — de sorte qu'un protocole s'implémente **en firmware**,
-pas en logique figée.
+Design an **open-source, general-purpose protocol emulator**: a tiny CPU whose
+instruction set is built for reading pins, writing pins, counting cycles and hitting
+timing precisely enough that a protocol is implemented **in firmware**, not in fixed
+logic.
 
-> « The goal isn't to put a UART block, an SPI block, and an I2C block on one die and
-> call it done. »
+> "The goal isn't to put a UART block, an SPI block, and an I2C block on one die and
+> call it done."
 
-La puce doit rester **reprogrammable après fabrication**, dans ses limites de timing et
-d'I/O. Références citées : les state machines PIO du RP2040, les cores PRU des TI Sitara
-— « et ce que vous feriez différemment ».
+The chip must stay **reprogrammable after fabrication**, within its timing and I/O
+constraints. Named references: the RP2040's PIO state machines and TI Sitara PRU cores —
+"and consider what you'd do differently".
 
-- **Minimum** : UART, SPI, I2C
-- **Stretch** : USB low-speed, Ethernet 10 Mbit
-- **Bonus évoqués** : JTAG, SWD, PS/2, CAN
+- **Minimum**: UART, SPI, I2C
+- **Stretch**: low-speed USB, 10 Mbit Ethernet
+- **Also floated**: JTAG, SWD, PS/2, CAN
 
-## Contraintes dures
+## Hard constraints
 
 | | |
 |---|---|
 | Process | IHP 130nm CMOS5L (`ihp-sg13cmos5l`) via [Tiny Tapeout](https://www.tinytapeout.com/) |
-| Template | [`TinyTapeout/ttihp-verilog-template`](https://github.com/TinyTapeout/ttihp-verilog-template/tree/cmos5l) branche `cmos5l` |
-| Aire | **6x4 tiles** ≈ 0,7 mm² ; budget ≈ **1K cellules logiques / tile** → ~24 000 cellules |
-| Licence | Open source obligatoire. Développement public encouragé (pas de secret à tenir) |
-| Équipes | Fortement recommandées |
-| Deadline | **18 janvier 2027** |
-| Outils | Tous gratuits et open source |
+| Template | [`TinyTapeout/ttihp-verilog-template`](https://github.com/TinyTapeout/ttihp-verilog-template/tree/cmos5l), branch `cmos5l` |
+| Area | **6x4 tiles** ≈ 0.7 mm²; budget ≈ **1K logic cells / tile** → ~24,000 cells |
+| Licence | Open source required. Public development encouraged (nothing to keep hidden) |
+| Teams | Strongly recommended |
+| Deadline | **18 January 2027** |
+| Tools | All free and open source |
 
-Aucune règle n'interdit l'usage de l'IA. Au contraire — voir critères ci-dessous.
+Nothing forbids the use of AI. Quite the opposite — see the criteria below.
 
-## Critères de jugement
+## Judging criteria
 
-Textuellement, ils cherchent :
+Verbatim, they are looking for:
 
-1. Une **fonctionnalité originale** (« unique functionality »)
-2. Des **approches originales de design et de vérification** — ils citent nommément
-   « formal methods, random constrained tests, **AI-assisted verification** »
+1. **Unique functionality**
+2. **Novel approaches to design and verification** — they name "formal methods, random
+   constrained tests, **AI-assisted verification**"
 
-> « As AI-assisted chip design becomes more common, we believe verification will be an
-> extremely important aspect of the ASIC design flow going forwards. »
+> "As AI-assisted chip design becomes more common, we believe verification will be an
+> extremely important aspect of the ASIC design flow going forwards."
 
-**Conséquence directe sur la stratégie** : la vérification n'est pas une corvée de fin de
-projet, c'est un **livrable jugé**. Un design plus modeste avec une méthodologie de vérif
-remarquable bat un design ambitieux mal vérifié. Voir ADR-007.
+**Direct strategic consequence**: verification is not end-of-project drudgery, it is a
+**judged deliverable**. A more modest design with a remarkable verification methodology
+beats an ambitious one that is poorly verified. See ADR-007.
 
-## Prix
+## Prize
 
-Jane Street paie le tape-out des designs les plus originaux sur une navette Tiny Tapeout,
-cible **mars 2027** (sous réserve du planning de la fonderie). Les gagnants reçoivent la
-puce fabriquée, montée sur une dev board.
+Jane Street pays to tape out the most novel designs on a Tiny Tapeout shuttle, targeting
+**March 2027** (subject to the foundry schedule). Winners receive the fabricated chip
+mounted on a dev board.
 
-## Questions en suspens
+## Open questions
 
-- [ ] **6x4 est-il réellement accepté par les outils ?** Le commentaire de `info.yaml` en
-      amont ne liste que `1x1, 1x2, 2x2, 3x2, 4x2, 6x2, 8x2`. Le blog impose 6x4. On a mis
-      6x4 (ADR-002). **La CI est l'arbitre** — le job `precheck` tranchera. Si ça casse :
-      mail à `asic-competition@janestreet.com`.
-- [ ] **8x4 (+30 % d'aire)** est « à l'étude ». Ils préviendront par mail **les inscrits**.
-      → raison concrète de remplir le formulaire d'inscription, au-delà de la formalité.
-- [ ] **Fréquence d'horloge max** sur ce nœud. On a supposé 50 MHz (ADR-008). C'est ce qui
-      fixe la résolution temporelle, donc le débit max atteignable, donc si USB low-speed
-      (1,5 Mbit/s) et Ethernet 10M sont réalistes. **À confirmer avant de figer l'ISA.**
-- [ ] **Formulaire d'inscription** : pas encore rempli. À faire par Paul (données perso).
+- [ ] **Is 6x4 actually accepted by the tools?** The upstream `info.yaml` comment only
+      lists `1x1, 1x2, 2x2, 3x2, 4x2, 6x2, 8x2`. The blog mandates 6x4. We set 6x4
+      (ADR-002). **CI is the arbiter** — the `precheck` job will settle it. If it fails:
+      email `asic-competition@janestreet.com`.
+- [ ] **8x4 (+30% area)** is "under consideration". They will email **people who signed
+      up**. → a concrete reason to fill in the sign-up form, beyond formality.
+- [ ] **Maximum clock frequency** on this node. We assumed 50 MHz (ADR-008). It sets the
+      timing resolution, hence the maximum bit rate, hence whether low-speed USB
+      (1.5 Mbit/s) and 10M Ethernet are realistic. **Confirm before freezing the ISA.**
+- [ ] **Sign-up form**: not yet submitted. Paul's to do (personal data).
       https://docs.google.com/forms/d/e/1FAIpQLSeF7fq756MegxZRQxotBwUJYZx-cL9MrGjxV0z4uD_J0sADxQ/viewform
-- [ ] Le lien de **soumission finale** sera ajouté sur la page du blog plus tard.
+- [ ] The **final submission link** will be added to the blog page closer to the deadline.
 
-## Ressources
+## Resources
 
-- Documentation Tiny Tapeout : https://www.tinytapeout.com/
-- Exemple de SRAM sur ce nœud : https://www.tinytapeout.com/chips/ttihp0p2/tt_um_urish_sram_test
-- Hardcaml (leur outil maison, non obligatoire) : https://hardcaml.org/
+- Tiny Tapeout documentation: https://www.tinytapeout.com/
+- SRAM example on this node: https://www.tinytapeout.com/chips/ttihp0p2/tt_um_urish_sram_test
+- Hardcaml (their in-house tool, not required): https://hardcaml.org/
