@@ -11,6 +11,8 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
 
+from waveform import assert_wave, record, show
+
 CLK_NS = 20  # 50 MHz
 CLK_DIV = 434  # must match the CLK_DIV parameter in project.v
 BIT_NS = CLK_NS * CLK_DIV
@@ -167,3 +169,39 @@ async def test_bit_timing(dut):
         assert cycles == CLK_DIV, (
             f"bit slot {slot} lasted {cycles} clocks, expected {CLK_DIV}"
         )
+
+
+@cocotb.test()
+async def test_frame_waveform(dut):
+    """Assert the serial line against a literal ASCII waveform.
+
+    Technique borrowed from Jane Street's "Using ASCII waveforms to test
+    hardware designs". The expected shape of the frame is written out in the
+    test, so a regression shows up as two misaligned pictures rather than as a
+    failed integer comparison.
+
+    Each column is one bit time, sampled at its midpoint:
+    start, d0..d7 (LSB first), stop, idle.
+    """
+    cocotb.start_soon(Clock(dut.clk, CLK_NS, unit="ns").start())
+    await reset(dut)
+
+    for byte, expected in (
+        (0x55, "___/‾‾\\__/‾‾\\__/‾‾\\__/‾‾\\__/‾‾‾‾‾"),
+        (0xA5, "___/‾‾\\__/‾‾\\_____/‾‾\\__/‾‾‾‾‾‾‾‾"),
+    ):
+        await send(dut, byte)
+
+        # Line up on the start bit, then sample at each bit's midpoint.
+        while tx(dut) == 1:
+            await RisingEdge(dut.clk)
+
+        traces = await record(
+            {"tx": lambda: tx(dut)},
+            period_ns=BIT_NS,
+            count=11,
+            phase_ns=BIT_NS // 2,
+        )
+        dut._log.info(f"0x{byte:02X}\n{show(traces, width=3)}")
+        assert_wave("tx", traces["tx"], expected, width=3)
+        await wait_idle(dut)

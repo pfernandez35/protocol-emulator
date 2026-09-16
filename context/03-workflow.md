@@ -86,3 +86,67 @@ no parents. Fixed with `git fetch --unshallow upstream`. The template remote is 
 - Every timing assertion is exact, never tolerant (ADR-005).
 - One structural decision made = one entry in `02-decisions.md`, with its why.
 - Never rewrite a decision: mark it `Superseded` and write a new one (see ADR-010/011).
+
+## Seeing the design
+
+Five ways to look at the design, from fastest to most real.
+
+### 1. ASCII waveforms, in the test output (no tools, works in CI)
+
+`test/waveform.py` records pin traces and renders them as ASCII. A test states the
+waveform it expects as a literal string; a mismatch prints two aligned pictures with the
+first differing column marked, instead of `assert 0 == 1`.
+
+```
+tx  ___/‾‾\__/‾‾\__/‾‾\__/‾‾\__/‾‾‾‾‾      0x55
+tx  ___/‾‾\__/‾‾\_____/‾‾\__/‾‾‾‾‾‾‾‾      0xA5
+```
+
+The technique is taken from Jane Street's own
+["Using ASCII waveforms to test hardware designs"](https://blog.janestreet.com/using-ascii-waveforms-to-test-hardware-designs/).
+Beyond being convenient, it is on-theme: verification methodology is a judged criterion,
+and this is their own published method. See `test_frame_waveform` in `test.py`.
+
+### 2. Full waveforms in a viewer
+
+Every simulation writes `test/tb.fst`.
+
+```bash
+gtkwave test/tb.fst
+```
+
+Use it when something is wrong and you need every signal, including internals. The ASCII
+waveforms are for asserting known-good behaviour; the viewer is for investigating
+unknown-bad behaviour.
+
+### 3. RTL schematic
+
+```bash
+yosys -p "read_verilog src/*.v; prep -top uart_tx; \
+          show -notitle -format png -prefix build/uart_tx_schematic"
+```
+
+Renders the elaborated netlist as a diagram (requires `graphviz`). Good for checking that
+the structure you meant is the structure you wrote — how many flip-flops, what feeds what.
+Output goes to `build/`, which is gitignored.
+
+### 4. The actual silicon layout
+
+The `viewer` CI job publishes an interactive layout to GitHub Pages:
+
+**https://pfernandez35.github.io/protocol-emulator/**
+
+The `gds_render` CI artifact is the same thing as a PNG. At milestone 1 it shows the whole
+6x4 die as empty filler with one small cluster of logic in a corner — a 0.3% utilisation
+made visible.
+
+`tt_submission` is the other artifact worth knowing about: it holds the GDS, the LEF, the
+post-layout netlist and `stats/synthesis-stats.txt` (the real per-cell area breakdown).
+
+### 5. Real hardware
+
+`.github/workflows/fpga.yaml` builds an ICE40UP5K bitstream but is disabled on push
+(`branches: none`). Enable it if a compatible board is available. The blog recommends
+testing on FPGA before the ASIC flow, and at milestone 1 the design is directly
+observable: wire `uo_out[0]` to a 3.3 V USB-serial adapter and read characters at 115200
+baud.

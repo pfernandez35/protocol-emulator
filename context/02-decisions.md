@@ -7,7 +7,7 @@ re-proposed two months later.
 | # | Decision | Status |
 |---|---|---|
 | [001](#adr-001--verilog-rather-than-hardcaml) | Verilog rather than Hardcaml | Accepted |
-| [002](#adr-002--tiles-6x4-despite-the-template) | `tiles: 6x4` despite the template | Accepted, pending CI |
+| [002](#adr-002--tiles-6x4-despite-the-template) | `tiles: 6x4` despite the template | **Confirmed by CI** |
 | [003](#adr-003--milestone-1-is-disposable-by-design) | Milestone 1 is disposable by design | Accepted |
 | [004](#adr-004--tests-decode-the-pin-never-internal-state) | Tests read pins, never internal state | Accepted |
 | [005](#adr-005--timing-is-asserted-from-day-one) | Timing asserted from day one | Accepted |
@@ -44,7 +44,7 @@ only if the project runs far ahead of schedule, which is unlikely.
 
 ## ADR-002 — `tiles: 6x4` despite the template
 
-**Status:** Accepted, pending CI · 16 Sep 2026
+**Status:** Confirmed by CI · 16 Sep 2026
 
 **Context.** The blog explicitly mandates `tiles: "6x4"` in `info.yaml`. The upstream
 template comment lists only `1x1, 1x2, 2x2, 3x2, 4x2, 6x2, 8x2` as valid — 6x4 is absent.
@@ -55,10 +55,14 @@ template comment lists only `1x1, 1x2, 2x2, 3x2, 4x2, 6x2, 8x2` as valid — 6x4
 not, or the blog is ahead of the template. Reading cannot distinguish them; only running
 can. The `precheck` job answers in one run for zero effort — far cheaper than guessing.
 
-**Consequence.** If `precheck` rejects 6x4, that is an email to
-`asic-competition@janestreet.com`, not a design problem. The area budget (~24K cells)
-does not move until the question is settled. Do not size the architecture on the
-assumption that 8x4 will land.
+**Outcome (same day).** `gds` and `precheck` both pass. 6x4 is accepted; the template
+comment is simply stale. Measured geometry: die 1289.28 × 710.64 µm = **0.92 mm²**, core
+902,417 µm² — one tile ≈ 215 × 178 µm, noticeably larger than the blog's own estimate.
+
+**Consequence.** Running it was the right call and cost nothing. Keep planning against
+~24K cells: the measured ceiling is higher (see the extrapolation in `README.md`) but
+100% utilisation is not routable, and the blog's conservative figure leaves the margin
+that place & route will actually need. Do not size the architecture on 8x4 landing.
 
 ---
 

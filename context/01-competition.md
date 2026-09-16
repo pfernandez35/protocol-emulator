@@ -58,10 +58,11 @@ mounted on a dev board.
 
 ## Open questions
 
-- [ ] **Is 6x4 actually accepted by the tools?** The upstream `info.yaml` comment only
-      lists `1x1, 1x2, 2x2, 3x2, 4x2, 6x2, 8x2`. The blog mandates 6x4. We set 6x4
-      (ADR-002). **CI is the arbiter** — the `precheck` job will settle it. If it fails:
-      email `asic-competition@janestreet.com`.
+- [x] ~~**Is 6x4 actually accepted by the tools?**~~ **Settled 16 Sep 2026: yes.**
+      `gds` and `precheck` both pass on 6x4 despite the stale template comment. Measured
+      geometry: die **1289.28 × 710.64 µm = 0.92 mm²**, core area 902,417 µm². That is one
+      tile ≈ **215 × 178 µm**, larger than the blog's "200 × 150 µm" estimate, and a die
+      0.92 mm² rather than the stated ~0.7 mm². See ADR-002.
 - [ ] **8x4 (+30% area)** is "under consideration". They will email **people who signed
       up**. → a concrete reason to fill in the sign-up form, beyond formality.
 - [ ] **Maximum clock frequency** on this node. We assumed 50 MHz (ADR-008). It sets the
@@ -69,6 +70,14 @@ mounted on a dev board.
       (1.5 Mbit/s) and 10M Ethernet are realistic. **Confirm before freezing the ISA.**
 - [ ] **Sign-up form**: not yet submitted. Paul's to do (personal data).
       https://docs.google.com/forms/d/e/1FAIpQLSeF7fq756MegxZRQxotBwUJYZx-cL9MrGjxV0z4uD_J0sADxQ/viewform
+- [ ] **`gl_test` is broken upstream, not by us.** Gate-level simulation fails with
+      `Unknown module type: ihp_dff_r` at `sg13cmos5l_stdcell.v:931` — the PDK's Verilog
+      view references a primitive it never defines. 26 elaboration errors, all the same
+      cause. `gds` and `precheck` pass, so the hardening flow is fine; only gate-level
+      simulation is blocked. This affects every design on this PDK, not just ours. Worth
+      reporting to Tiny Tapeout, and worth mentioning to
+      `asic-competition@janestreet.com` since they are pushing verification as a judging
+      criterion. **Consequence: no gate-level verification until it is fixed.**
 - [ ] The **final submission link** will be added to the blog page closer to the deadline.
 
 ## Resources

@@ -34,7 +34,10 @@ Street competition, **deadline 18 January 2027**. Judged on **functional novelty
    chip's reason to exist.
 5. **Watch the area budget on every significant addition.**
    `yosys -p "read_verilog src/*.v; synth -top tt_um_pfernandez35_protoemu -flatten; stat"`
-   Benchmark: the fixed UART TX is 104 cells, 0.4% of budget.
+   Benchmark: the fixed UART TX is 104 generic cells / 177 real PDK cells,
+   2,429 µm², 0.296% utilisation. The real number comes from the `tt_submission`
+   CI artifact (`stats/synthesis-stats.txt`); yosys locally is an order-of-magnitude
+   check only.
 6. **Adding a source file takes two edits**: `info.yaml:source_files` **and**
    `test/Makefile:PROJECT_SOURCES`. Forgetting the second gives an incomprehensible error.
 7. **`docs/` belongs to Tiny Tapeout** (the published datasheet — CI fails if it is left

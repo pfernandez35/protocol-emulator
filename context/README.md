@@ -17,17 +17,38 @@ Without it the reasoning is lost and gets re-litigated three weeks later.
 ## State as of 16 September 2026
 
 Milestone 1 **done**: a byte written to `ui_in` and strobed with `uio_in[0]` comes out
-of `uo_out[0]` as an 8N1 UART frame. 4 cocotb tests green. RTL simulation runs locally;
-the full GDS flow runs in CI.
+of `uo_out[0]` as an 8N1 UART frame. 5 cocotb tests green. **The design has been through
+the real flow**: synthesised, placed and routed, and `precheck` passes at 6x4.
 
-| Measure | Value |
-|---|---|
-| UART TX area (generic yosys, `-flatten`) | **104 cells**, 23 flip-flops |
-| Total budget | ~24,000 cells (24 tiles × ~1K) |
-| Occupancy | **~0.4%** |
+| Measure | Generic yosys | **Real PDK** |
+|---|---|---|
+| Cells | 104 | **177** |
+| Flip-flops | 23 | **23** |
+| Cell area | — | **2,429 µm²** (46% sequential) |
+| Die | — | 1289.28 × 710.64 µm = **0.92 mm²** |
+| Utilisation | ~0.4% | **0.296%** |
+
+Two things worth knowing from these numbers:
+
+**45 of the 177 cells are `tiehi`/`tielo`** — a quarter of the design exists only to tie
+unused output pins to a constant, because the Tiny Tapeout harness requires every pin to
+be driven. Fixed overhead; it does not scale with the design, but do not be surprised by
+it again.
+
+**The real ceiling is higher than the blog's estimate.** At 2,429 µm² for 177 cells
+(≈13.7 µm²/cell), the 902,417 µm² core would hold ~65,000 cells at 100% utilisation, so
+roughly **39,000 at a routable 60%** — against the blog's ~24,000. Keep planning against
+24,000: the margin is what place & route will consume. Treat the difference as headroom,
+not as budget.
 
 Reading: a fixed UART costs nothing. The budget will go entirely into the programmable
 core — instruction memory, decoder, timing counters. That is where the project is won.
+
+### Known broken
+
+`gl_test` fails on an upstream PDK bug — `Unknown module type: ihp_dff_r` in the
+standard-cell Verilog view. Not our design: `gds` and `precheck` pass. It blocks
+gate-level verification for every project on this PDK. See `01-competition.md`.
 
 ## Blocked on / next actions
 
