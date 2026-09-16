@@ -1,8 +1,17 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
 
-# Tiny Tapeout Verilog Project Template
+# Protocol Emulator
 
-- [Read the documentation for project](docs/info.md)
+A tiny programmable core that bit-bangs hardware protocols (UART, SPI, I2C) in firmware
+rather than in fixed logic. Entry for the [Jane Street protocol emulator ASIC
+competition](https://blog.janestreet.com/protocol-emulator-asic-competition/), targeting
+6x4 Tiny Tapeout tiles on IHP 130nm CMOS5L.
+
+> **Working on this repo? Read [`context/README.md`](context/README.md) first.**
+> It holds the constraints, the architecture decisions and their rationale — none of
+> which are inferable from the code alone.
+
+- [Project datasheet](docs/info.md)
 
 ## What is Tiny Tapeout?
 

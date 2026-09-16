@@ -9,7 +9,7 @@ project:
 
   # Jane Street ASIC competition: the blog post instructs 6x4.
   # NOTE: the upstream template comment only lists up to 8x2 -- CI is the
-  # authority on whether 6x4 is accepted yet. See NOTES.md.
+  # authority on whether 6x4 is accepted yet. See context/02-decisions.md (ADR-002).
   tiles: "6x4"
 
   # Your top module name must start with "tt_um_".
